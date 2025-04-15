@@ -2,6 +2,9 @@ import "./style.css";
 
 import "@bitovi/ai-component-paste/component";
 
+const aiPaste = document.querySelector("ai-paste");
+aiPaste?.setAttribute("api", import.meta.env.VITE_API_URL + "/extract-form-data");
+
 const prompts = [
   `hey can you post a job for us?
 
@@ -72,6 +75,7 @@ function createPromptCard(text: string): HTMLDivElement {
 }
 
 const container = document.getElementById("prompts")!;
+
 prompts.forEach((text) => {
   const card = createPromptCard(text);
   container.appendChild(card);
