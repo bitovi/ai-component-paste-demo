@@ -25,7 +25,7 @@ jobs:
           npm run build
 
       - name: Create deploy-bucket
-        uses: bitovi/github-actions-deploy-static-site-to-aws@0.2.5
+        uses: bitovi/github-actions-deploy-static-site-to-aws@v0.2.5
         with:
           working_directory: ui
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
