@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Create .env file
+        run: |
+          cd ui
+          echo "VITE_API_URL=https://ai-component-paste-api.bitovi-sandbox.com" > .env
+
+      - name: Deploy to GitHub Pages
+        uses: bitovi/github-actions-deploy-github-pages-action@v1.0.5
+        with:
+          working_directory: ui
+          build_command: npm run build
+          dist_dir: dist
+          app_name: ai-component-paste-demo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Deploy to EC2
+        uses: bitovi/github-actions-deploy-docker-to-ec2@v1
+        with:
+          working_directory: server
+          checkout: false
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SANDBOX }}
+          aws_default_region: us-east-1
+
+          tf_state_bucket_destroy: true
+
+          aws_r53_enable: true
+          aws_r53_create_sub_cert: true
+          aws_r53_sub_domain_name: ai-component-paste-api
+          aws_r53_domain_name: bitovi-sandbox.com
+          aws_elb_app_port: 3000
+
+          docker_full_cleanup: true
+
+          aws_ec2_instance_type: t3.small
+          aws_ec2_instance_root_vol_size: 16
+
+          repo_env: repo_env
+          env_ghs: ${{ secrets.DOT_ENV_DEPLOYED }}
