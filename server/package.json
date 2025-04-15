@@ -1,0 +1,16 @@
+{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild --bundle --outfile=./dist/index.js --platform=node --target=node20 ./src/index.ts",
+    "dev": "esbuild --bundle --outfile=./dist/index.js --platform=node --target=node20 ./src/index.ts --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.4"
+  },
+  "dependencies": {
+    "@bitovi/ai-component-paste": "^0.0.5",
+    "@hono/node-server": "^1.14.1",
+    "hono": "^4.7.6"
+  }
+}
