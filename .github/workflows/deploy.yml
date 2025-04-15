@@ -17,19 +17,30 @@ jobs:
         with:
           node-version: 22
 
-      - name: Create .env file
+      - name: Create .env file and build
         run: |
           cd ui
           echo "VITE_API_URL=https://ai-component-paste-api.bitovi-sandbox.com" > .env
+          npm ci
+          npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: bitovi/github-actions-deploy-github-pages-action@v1.0.5
+      - name: Create deploy-bucket
+        uses: bitovi/github-actions-deploy-static-site-to-aws@Make-origin-access-unique
         with:
           working_directory: ui
-          build_command: npm run build
-          dist_dir: dist
-          app_name: ai-component-paste-demo
-          token: ${{ secrets.GITHUB_TOKEN }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SANDBOX }}
+          aws_default_region: us-east-1
+          checkout: false
+          aws_site_source_folder: /ui/dist
+
+          tf_action: "apply"
+          tf_state_bucket_destroy: true
+          aws_site_cdn_enabled: true
+
+          aws_r53_domain_name: bitovi-sandbox.com
+          aws_r53_sub_domain_name: ai-component-paste
+          aws_r53_create_sub_cert: true
 
   deploy-server:
     runs-on: ubuntu-latest
@@ -45,7 +56,7 @@ jobs:
       - name: Deploy to EC2
         uses: bitovi/github-actions-deploy-docker-to-ec2@v1
         with:
-          working_directory: server
+          docker_repo_app_directory: server/
           checkout: false
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SANDBOX }}
