@@ -9,7 +9,9 @@ const app = new Hono();
 app.use(
   "*",
   cors({
-    origin: ["http://localhost:5173", "https://ai-component-paste.bitovi-sandbox.com", "https://bitovi.com"],
+    origin: (origin) => {
+      return origin.endsWith("bitovi.com") ? origin : "https://ai-component-paste.bitovi-sandbox.com";
+    },
   })
 );
 
