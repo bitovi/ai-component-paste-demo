@@ -10,7 +10,7 @@ app.use(
   "*",
   cors({
     origin: (origin) => {
-      return origin.endsWith("bitovi.com") ? origin : "https://ai-component-paste.bitovi-sandbox.com";
+      return origin.includes("bitovi.com") ? origin : "https://ai-component-paste.bitovi-sandbox.com";
     },
   })
 );
