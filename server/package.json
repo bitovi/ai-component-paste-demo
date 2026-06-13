@@ -6,7 +6,7 @@
     "dev": "esbuild --bundle --outfile=./dist/index.js --platform=node --target=node20 --format=esm --watch ./src/index.ts"
   },
   "devDependencies": {
-    "esbuild": "^0.21.4"
+    "esbuild": "^0.28.1"
   },
   "dependencies": {
     "@bitovi/ai-component-paste": "^0.0.5",
