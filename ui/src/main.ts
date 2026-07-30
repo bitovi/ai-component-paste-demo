@@ -3,7 +3,7 @@ import "./style.css";
 import "@bitovi/ai-component-paste/component";
 
 const aiPaste = document.querySelector("ai-paste");
-aiPaste?.setAttribute("api", import.meta.env.VITE_API_URL + "/extract-form-data");
+aiPaste?.setAttribute("api", "/extract-form-data");
 
 const prompts = [
   `hey can you post a job for us?

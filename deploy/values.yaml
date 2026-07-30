@@ -1,0 +1,14 @@
+name: ai-component-paste-demo
+repo: bitovi/ai-component-paste-demo
+
+workloads:
+  main:
+    kind: server
+    port: 3000
+    health: /health
+    domain: ai-component-paste.bitovi-tools.com
+    # Leave empty: CI fills the tag in on release. Don't edit by hand.
+    image: {}
+    secrets: op://bitovi-platform/ai-component-paste-demo-secrets
+infra:
+  hostedZone: bitovi-tools-com
