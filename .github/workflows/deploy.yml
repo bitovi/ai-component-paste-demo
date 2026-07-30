@@ -51,6 +51,9 @@ jobs:
       deploy-branch: "main"
       writeback-app-id: ${{ vars.CI_WRITEBACK_APP_ID }}
       environment-label: release
+      # The API lives in server/, not the repo root.
+      dockerfile: server/Dockerfile
+      build-context: server
     secrets: inherit
 
   notify:

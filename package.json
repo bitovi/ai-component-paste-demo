@@ -1,6 +1,0 @@
-{
-  "name": "ai-component-paste-demo",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Repo root marker. The UI lives in ui/ and the API in server/, each with its own package.json/lock. This file and the sibling package-lock.json exist so CI that expects a repo-root npm lockfile (the shared static-site deploy workflow's setup-node cache step) has one; the UI build itself runs with `npm --prefix ui`."
-}

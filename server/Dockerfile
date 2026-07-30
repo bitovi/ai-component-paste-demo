@@ -6,10 +6,10 @@ FROM node:22-alpine AS server-build
 
 WORKDIR /app
 
-COPY server/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
-COPY server/ ./
+COPY . .
 RUN npm run build
 
 # --- Stage 2: runtime ---
@@ -20,7 +20,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Prod deps only.
-COPY server/package*.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=server-build /app/dist ./dist

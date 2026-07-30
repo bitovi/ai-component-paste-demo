@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   deploy:
-    uses: bitovi/platform-ci/.github/workflows/static-site-deploy.yml@0.0.1
+    uses: bitovi/platform-ci/.github/workflows/static-site-deploy.yml@0.0.2
     # A called workflow can only narrow permissions, so the caller grants them:
     # id-token for OIDC to AWS, contents to check the source out.
     permissions:
@@ -27,6 +27,9 @@ jobs:
       node-version: "22"
       # The UI lives in ui/, so install and build there rather than at the root.
       install-command: npm --prefix ui ci
+      # Points setup-node's cache at the real lockfile since the build isn't
+      # at the repo root.
+      cache-dependency-path: ui/package-lock.json
       build-command: npm --prefix ui run build
       build-dir: ui/dist
       # Polled until it serves 200 — the real "did this deploy land" check.
