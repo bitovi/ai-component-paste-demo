@@ -44,8 +44,8 @@ jobs:
       actions: write
     with:
       values-file: deploy/values.yaml
-      # An interface file keeps the tag on the workload.
-      image-tag-path: .workloads.main.image.tag
+      # The API is the `api` workload; the `main` workload is the static UI.
+      image-tag-path: .workloads.api.image.tag
       # Tag the image with the release tag rather than the commit SHA.
       image-tag: ${{ github.ref_name }}
       deploy-branch: "main"
@@ -64,7 +64,6 @@ jobs:
       environment: production
       title: ${{ (needs.test.result == 'success' && needs.release.result == 'success') && 'release deployed' || 'release failed' }}
       detail: "Tag: ${{ github.ref_name }}"
-    secrets:
-      # A repo-level SLACK_WEBHOOK_URL wins; otherwise the org-level default
-      # applies, so no per-repo Slack setup is required.
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || secrets.BITOVI_PLATFORM_SLACK_WEBHOOK_URL }}
+    # inherit carries BITOVI_PLATFORM_SLACK_WEBHOOK_URL through to the reusable
+    # workflow, which references it directly.
+    secrets: inherit

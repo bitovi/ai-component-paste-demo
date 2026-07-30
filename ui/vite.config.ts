@@ -3,8 +3,8 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [tailwindcss()],
-  // In production the server serves this build same-origin; in dev, proxy the
-  // API call to the local server so the same relative path works.
+  // In dev the API call is same-origin, so proxy it to the local server. In
+  // production VITE_API_URL points at the API server's own domain instead.
   server: {
     proxy: {
       "/extract-form-data": "http://localhost:3000",

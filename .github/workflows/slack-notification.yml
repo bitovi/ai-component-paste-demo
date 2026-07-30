@@ -24,9 +24,6 @@ on:
         required: false
         type: string
         default: ""
-    secrets:
-      SLACK_WEBHOOK_URL:
-        required: true
 
 jobs:
   notify:
@@ -36,7 +33,7 @@ jobs:
         if: inputs.detail != ''
         uses: slackapi/slack-github-action@v2.1.0
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.BITOVI_PLATFORM_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             blocks:
@@ -57,7 +54,7 @@ jobs:
         if: inputs.detail == ''
         uses: slackapi/slack-github-action@v2.1.0
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.BITOVI_PLATFORM_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             blocks:
