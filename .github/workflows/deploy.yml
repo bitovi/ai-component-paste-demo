@@ -34,7 +34,7 @@ jobs:
 
   release:
     needs: [test]
-    uses: bitovi/bitovi-platform-services/.github/workflows/container-build.yml@0.0.4
+    uses: bitovi/platform-ci/.github/workflows/container-build.yml@0.0.1
     # A called workflow can only narrow permissions, so the caller grants them:
     # OIDC to AWS, the write-back commit, and cancelling the run when there is
     # nothing to deploy.
