@@ -3,7 +3,10 @@ import "./style.css";
 import "@bitovi/ai-component-paste/component";
 
 const aiPaste = document.querySelector("ai-paste");
-aiPaste?.setAttribute("api", import.meta.env.VITE_API_URL + "/extract-form-data");
+// VITE_API_URL is baked in at build time and points at the API server. In dev
+// it is unset, so the call is same-origin and Vite's proxy forwards it.
+const apiBase = import.meta.env.VITE_API_URL ?? "";
+aiPaste?.setAttribute("api", `${apiBase}/extract-form-data`);
 
 const prompts = [
   `hey can you post a job for us?

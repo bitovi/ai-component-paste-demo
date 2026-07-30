@@ -1,0 +1,57 @@
+name: Deploy UI (static site)
+
+# The UI is a static site: on every merge to main that touches ui/, build it
+# and sync it to its S3 bucket (CloudFront in front). The API is separate and
+# deploys on version tags via deploy.yml.
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "ui/**"
+      - ".github/workflows/deploy-ui.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: bitovi/platform-ci/.github/workflows/static-site-deploy.yml@v0.0.2
+    # A called workflow can only narrow permissions, so the caller grants them:
+    # id-token for OIDC to AWS, contents to check the source out.
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      node-version: "22"
+      # The UI lives in ui/, so install and build there rather than at the root.
+      install-command: npm --prefix ui ci
+      # Points setup-node's cache at the real lockfile since the build isn't
+      # at the repo root.
+      cache-dependency-path: ui/package-lock.json
+      build-command: npm --prefix ui run build
+      build-dir: ui/dist
+      # Polled until it serves 200 — the real "did this deploy land" check.
+      verify-url: https://ai-component-paste.bitovi-tools.com
+      # VITE_* is inlined into the public bundle at build time, so it belongs
+      # here, not in secrets.
+      build-env: |
+        VITE_API_URL=https://ai-component-paste-api.bitovi-tools.com
+    secrets: inherit
+
+  notify:
+    name: Slack Notification
+    needs: [deploy]
+    if: always()
+    uses: ./.github/workflows/slack-notification.yml
+    with:
+      status: ${{ needs.deploy.result == 'success' && 'success' || 'failure' }}
+      service_name: "ai-component-paste-demo"
+      environment: production
+      title: ${{ needs.deploy.result == 'success' && 'UI deployed' || 'UI deploy failed' }}
+      detail: "Ref: ${{ github.ref_name }} (${{ github.sha }})"
+    secrets: inherit

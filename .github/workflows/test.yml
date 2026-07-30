@@ -1,0 +1,36 @@
+# PR test workflow — same gate the release (deploy.yml) runs on vX.Y.Z tags.
+
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+    # Don't burn CI on the release write-back commit, which only touches the
+    # image tag.
+    paths-ignore:
+      - 'deploy/values.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            server/package-lock.json
+      - run: npm --prefix ui ci
+      - run: npm --prefix ui run build
+      - run: npm --prefix server ci
+      - run: npm --prefix server run build

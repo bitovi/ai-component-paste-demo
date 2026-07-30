@@ -1,0 +1,23 @@
+name: ai-component-paste-demo
+repo: bitovi/ai-component-paste-demo
+
+workloads:
+  # UI: static site on the primary domain. It must stay `main` so its bucket,
+  # distribution, and deploy role are named after the bare repo name, which is
+  # what the static-site deploy workflow derives them from.
+  main:
+    kind: static-site
+    domain: ai-component-paste.bitovi-tools.com
+
+  # API: the Hono server, on its own subdomain. CI writes the image tag here on
+  # release; don't edit image by hand.
+  api:
+    kind: server
+    port: 3000
+    health: /health
+    domain: ai-component-paste-api.bitovi-tools.com
+    image: {}
+    secrets: op://bitovi-platform/ai-component-paste-demo-secrets
+
+infra:
+  hostedZone: bitovi-tools-com

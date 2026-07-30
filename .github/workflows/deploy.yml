@@ -1,78 +1,72 @@
-name: Deploy
+name: Test, build, and deploy
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  # Never cancel a half-finished release; queue instead.
+  cancel-in-progress: false
 
 jobs:
-  deploy-ui:
+  # No unit tests today: the gate is that both packages install and build.
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            server/package-lock.json
+      - run: npm --prefix ui ci
+      - run: npm --prefix ui run build
+      - run: npm --prefix server ci
+      - run: npm --prefix server run build
 
-      - name: Create .env file and build
-        run: |
-          cd ui
-          echo "VITE_API_URL=https://ai-component-paste-api.bitovi-sandbox.com" > .env
-          npm ci
-          npm run build
+  release:
+    needs: [test]
+    uses: bitovi/platform-ci/.github/workflows/container-build.yml@v0.0.1
+    # A called workflow can only narrow permissions, so the caller grants them:
+    # OIDC to AWS, the write-back commit, and cancelling the run when there is
+    # nothing to deploy.
+    permissions:
+      id-token: write
+      contents: write
+      actions: write
+    with:
+      values-file: deploy/values.yaml
+      # The API is the `api` workload; the `main` workload is the static UI.
+      image-tag-path: .workloads.api.image.tag
+      # Tag the image with the release tag rather than the commit SHA.
+      image-tag: ${{ github.ref_name }}
+      deploy-branch: "main"
+      writeback-app-id: ${{ vars.CI_WRITEBACK_APP_ID }}
+      environment-label: release
+      # The API lives in server/, not the repo root.
+      dockerfile: server/Dockerfile
+      build-context: server
+    secrets: inherit
 
-      - name: Create deploy-bucket
-        uses: bitovi/github-actions-deploy-static-site-to-aws@v0.2.5
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SANDBOX }}
-          aws_default_region: us-east-1
-          checkout: false
-          aws_site_source_folder: /ui/dist
-
-          tf_action: "apply"
-          tf_state_bucket_destroy: true
-          aws_site_cdn_enabled: true
-
-          aws_r53_domain_name: bitovi-sandbox.com
-          aws_r53_sub_domain_name: ai-component-paste
-          aws_r53_create_sub_cert: true
-
-  deploy-server:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22
-
-      - name: Deploy to EC2
-        uses: bitovi/github-actions-deploy-docker-to-ec2@v1
-        with:
-          docker_repo_app_directory: server/
-          checkout: false
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_SANDBOX }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SANDBOX }}
-          aws_default_region: us-east-1
-
-          tf_state_bucket_destroy: true
-
-          aws_r53_enable: true
-          aws_r53_create_sub_cert: true
-          aws_r53_sub_domain_name: ai-component-paste-api
-          aws_r53_domain_name: bitovi-sandbox.com
-          aws_elb_app_port: 3000
-
-          docker_full_cleanup: true
-
-          aws_ec2_instance_type: t3.small
-          aws_ec2_instance_root_vol_size: 16
-
-          repo_env: repo_env
-          env_ghs: ${{ secrets.DOT_ENV_DEPLOYED }}
+  notify:
+    name: Slack Notification
+    needs: [test, release]
+    if: always()
+    uses: ./.github/workflows/slack-notification.yml
+    with:
+      status: ${{ (needs.test.result == 'success' && needs.release.result == 'success') && 'success' || 'failure' }}
+      service_name: "ai-component-paste-demo"
+      environment: production
+      title: ${{ (needs.test.result == 'success' && needs.release.result == 'success') && 'release deployed' || 'release failed' }}
+      detail: "Tag: ${{ github.ref_name }}"
+    # inherit carries BITOVI_PLATFORM_SLACK_WEBHOOK_URL through to the reusable
+    # workflow, which references it directly.
+    secrets: inherit
