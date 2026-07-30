@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: bitovi/platform-ci/.github/workflows/static-site-deploy.yml@0.0.2
+    uses: bitovi/platform-ci/.github/workflows/static-site-deploy.yml@v0.0.2
     # A called workflow can only narrow permissions, so the caller grants them:
     # id-token for OIDC to AWS, contents to check the source out.
     permissions:
